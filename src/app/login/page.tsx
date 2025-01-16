@@ -4,6 +4,13 @@ import React, { useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from 'zod';
+import { LOGIN_MUTATION } from '@/graphql/graphql-queries';
+import { useMutation } from '@apollo/client';
+import { useAppDispatch } from '../redux/store/hooks';
+import { login } from '../redux/features/authSlice';
+import Cookies from "js-cookie";
+import toast from 'react-hot-toast';
+import Link from 'next/link';
 
 const schema = z.object({
     email: z.string().nonempty('Email is required').email("Invalid email"),
@@ -15,15 +22,26 @@ type FormData = z.infer<typeof schema>;
 const Login = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [loginMutation] = useMutation(LOGIN_MUTATION);
+    const dispatch = useAppDispatch();
 
     const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
         resolver: zodResolver(schema),
     });
 
     const onSubmit = async (data: FormData) => {
-
+        setLoading(true);
+        try {
+            const response = await loginMutation({ variables: { email: data.email, password: data.password } });
+            dispatch(login({ token: response.data.token }));
+            Cookies.set("token", response.data.token, { expires: 7 });
+            router.push("/dashboard");
+        } catch (error: any) {
+            toast.error(error.message || "An unknown error occurred");
+        } finally {
+            setLoading(false);
+        }
     }
-
 
     return (
         <div className="flex justify-center items-center h-screen bg-gradient-to-r from-blue-400 to-cyan-400">
@@ -70,9 +88,9 @@ const Login = () => {
                 <div className="text-center mt-4">
                     <p className="text-gray-700">
                         Don't have an account?{' '}
-                        <a href="/register" className="text-blue-600 hover:text-blue-500">
+                        <Link href="/register" className="text-blue-600 hover:text-blue-500">
                             Register
-                        </a>
+                        </Link>
                     </p>
                 </div>
             </div>
