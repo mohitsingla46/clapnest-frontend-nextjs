@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
-import { useAppDispatch } from '../redux/store/hooks';
 import { useMutation, useQuery } from '@apollo/client';
 import { GET_ROLES, SIGNUP_MUTATION } from '@/graphql/graphql-queries';
 
@@ -24,7 +23,6 @@ const Register = () => {
 	const [loading, setLoading] = useState(false);
 	const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
 	const [signupMutation] = useMutation(SIGNUP_MUTATION);
-	const dispatch = useAppDispatch();
 
 	const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
 		resolver: zodResolver(schema),

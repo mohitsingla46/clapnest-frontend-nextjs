@@ -5,7 +5,16 @@ export const LOGIN_MUTATION = gql`
     signin(input: {
       email: $email,
       password: $password
-    })
+    }) {
+      token
+      user {
+        name
+        email
+        role {
+          name
+        }
+      }
+    }
   }
 `;
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Icon } from "@iconify/react"
 import { useAppDispatch } from '@/app/redux/store/hooks';
 import { useRouter } from 'next/navigation';
@@ -6,18 +6,34 @@ import { logout } from '@/app/redux/features/authSlice';
 import Cookies from "js-cookie";
 import Link from 'next/link';
 
+interface User {
+    name: string;
+    email: string;
+    role: {
+        name: string;
+    };
+}
+
 const Header = () => {
-
-    const userName = 'Demo User';
-    const userRole = 'Admin';
-
-    const [menuOpen, setMenuOpen] = useState(false);
-
     const dispatch = useAppDispatch();
     const router = useRouter();
 
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        } else {
+            setUser(null);
+        }
+    }, []);
+
     const handleLogout = () => {
         dispatch(logout());
+        localStorage.removeItem('user');
         Cookies.remove("token");
         router.push("/login");
     };
@@ -60,7 +76,7 @@ const Header = () => {
                     {/* User Info and Logout (Desktop) */}
                     <div className="hidden lg:flex items-center space-x-4">
                         <span>
-                            {userName} | {userRole}
+                            {user?.name} | {user?.role.name}
                         </span>
                         <button
                             onClick={handleLogout}
@@ -90,7 +106,7 @@ const Header = () => {
                     {/* User Info and Logout (Mobile) */}
                     <div className="mt-4 border-t border-gray-700 pt-4">
                         <span className="block mb-2">
-                            {userName} | {userRole}
+                            {user?.name} | {user?.role.name}
                         </span>
                         <button
                             onClick={handleLogout}

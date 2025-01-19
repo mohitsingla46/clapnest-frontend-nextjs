@@ -1,14 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface Role {
-    id: string;
     name: string;
 }
 
 interface User {
     name: string;
     email: string;
-    password: string;
     role: Role
 }
 
@@ -28,8 +26,9 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        login: (state, action: PayloadAction<{ token: string; }>) => {
+        login: (state, action: PayloadAction<{ token: string; user: User  }>) => {
             state.token = action.payload.token;
+            state.user = action.payload.user;
             state.isLoggedIn = true;
         },
         logout: (state) => {
