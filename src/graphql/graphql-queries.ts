@@ -8,6 +8,7 @@ export const LOGIN_MUTATION = gql`
     }) {
       token
       user {
+        id
         name
         email
         role {
@@ -35,6 +36,7 @@ export const SIGNUP_MUTATION = gql`
       password: $password,
       role: $role,
     }) {
+      id
       name
       email
       password
@@ -42,6 +44,29 @@ export const SIGNUP_MUTATION = gql`
         id,
         name
       }
+    }
+  }
+`;
+
+export const GET_CHATS = gql`
+  query{
+    getChats {
+      user {
+        id
+        name
+      }
+      lastMessage
+      lastMessageTime
+    }
+  }
+`;
+
+export const GET_CHAT_USERS = gql`
+  query {
+    getChatUsers {
+      id
+      name
+      email
     }
   }
 `;

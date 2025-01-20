@@ -36,7 +36,7 @@ const Login = () => {
             dispatch(login({ token: response.data.signin.token, user: response.data.signin.user }));
             Cookies.set("token", response.data.signin.token, { expires: 7 });
             localStorage.setItem('user', JSON.stringify(response.data.signin.user));
-            router.push("/dashboard");
+            router.push("/chat");
         } catch (error: any) {
             toast.error(error.message || "An unknown error occurred");
         } finally {

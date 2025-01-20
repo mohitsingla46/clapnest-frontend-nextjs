@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
     const isAuthRoute = publicRoutes.includes(pathname)
 
     if (token && isAuthRoute) {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
+        return NextResponse.redirect(new URL('/chat', request.url))
     }
 
     if (!token && !publicRoutes.includes(pathname)) {
