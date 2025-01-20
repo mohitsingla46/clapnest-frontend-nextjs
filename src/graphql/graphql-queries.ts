@@ -55,6 +55,7 @@ export const GET_CHATS = gql`
         id
         name
       }
+      roomId
       lastMessage
       lastMessageTime
     }
@@ -67,6 +68,20 @@ export const GET_CHAT_USERS = gql`
       id
       name
       email
+    }
+  }
+`;
+
+export const GET_CHAT_HISTORY = gql`
+  query getChatHistory($roomId: String!){
+    getChatHistory(roomId: $roomId) {
+      senderId
+      message
+      createdAt
+      user {
+        id
+        name
+      }
     }
   }
 `;
