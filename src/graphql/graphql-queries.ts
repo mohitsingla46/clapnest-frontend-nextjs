@@ -75,6 +75,7 @@ export const GET_CHAT_USERS = gql`
 export const GET_CHAT_HISTORY = gql`
   query getChatHistory($otherUserId: String!){
     getChatHistory(otherUserId: $otherUserId) {
+      id
       senderId
       message
       createdAt

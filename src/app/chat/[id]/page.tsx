@@ -37,7 +37,7 @@ const ChatDetail = () => {
         if (chatHistoryData?.getChatHistory) {
             setMessages(chatHistoryData.getChatHistory);
         }
-    }, []);
+    }, [userDetailsData, chatHistoryData]);
 
     return (
         <div className="min-h-screen md:flex md:justify-center md:items-center md:mt-2">
