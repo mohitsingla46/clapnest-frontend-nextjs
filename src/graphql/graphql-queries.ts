@@ -73,12 +73,26 @@ export const GET_CHAT_USERS = gql`
 `;
 
 export const GET_CHAT_HISTORY = gql`
-  query getChatHistory($roomId: String!){
-    getChatHistory(roomId: $roomId) {
+  query getChatHistory($otherUserId: String!){
+    getChatHistory(otherUserId: $otherUserId) {
       senderId
       message
       createdAt
       user {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const GET_USER_DETAIL = gql`
+  query getUserDetail($id: String!) {
+    getUserDetail(id: $id) {
+      id
+      name
+      email
+      role {
         id
         name
       }

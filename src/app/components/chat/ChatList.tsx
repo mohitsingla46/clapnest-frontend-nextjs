@@ -19,8 +19,8 @@ const ChatList = () => {
 			{chats.length > 0 ? (
 				chats.map((chat) => (
 					<Link
-						href={`/chat/${chat.roomId}`}
-						key={chat.roomId}
+						href={`/chat/${chat.user.id}`}
+						key={chat.user.id}
 						className="flex items-center p-4 hover:bg-gray-100"
 					>
 						<img
