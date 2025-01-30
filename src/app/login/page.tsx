@@ -1,16 +1,14 @@
 "use client"
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from 'zod';
 import { LOGIN_MUTATION } from '@/graphql/graphql-queries';
 import { useMutation } from '@apollo/client';
-import { useAppDispatch } from '../redux/store/hooks';
-import { login } from '../redux/features/authSlice';
-import Cookies from "js-cookie";
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 const schema = z.object({
     email: z.string().nonempty('Email is required').email("Invalid email"),
@@ -23,19 +21,21 @@ const Login = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [loginMutation] = useMutation(LOGIN_MUTATION);
-    const dispatch = useAppDispatch();
+    const { login: authLogin } = useAuth();
 
     const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
         resolver: zodResolver(schema),
     });
 
+    useEffect(() => {
+        localStorage.removeItem("user");
+    }, []);
+
     const onSubmit = async (data: FormData) => {
         setLoading(true);
         try {
             const response = await loginMutation({ variables: { email: data.email, password: data.password } });
-            dispatch(login({ token: response.data.signin.token, user: response.data.signin.user }));
-            Cookies.set("token", response.data.signin.token, { expires: 7 });
-            localStorage.setItem('user', JSON.stringify(response.data.signin.user));
+            authLogin(response.data.signin.user, response.data.signin.token);
             router.push("/chat");
         } catch (error: any) {
             toast.error(error.message || "An unknown error occurred");

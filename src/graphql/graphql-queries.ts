@@ -11,39 +11,21 @@ export const LOGIN_MUTATION = gql`
         id
         name
         email
-        role {
-          name
-        }
       }
-    }
-  }
-`;
-
-export const GET_ROLES = gql`
-  query {
-    getRoles {
-      id,
-      name
     }
   }
 `;
 
 export const SIGNUP_MUTATION = gql`
-  mutation signup($name: String!, $email: String!, $password: String!, $role: String!) {
+  mutation signup($name: String!, $email: String!, $password: String!) {
     signup(input: {
       name: $name,
       email: $email,
       password: $password,
-      role: $role,
     }) {
       id
       name
       email
-      password
-      role {
-        id,
-        name
-      }
     }
   }
 `;
@@ -55,7 +37,6 @@ export const GET_CHATS = gql`
         id
         name
       }
-      roomId
       lastMessage
       lastMessageTime
     }
@@ -79,6 +60,7 @@ export const GET_CHAT_HISTORY = gql`
       senderId
       message
       createdAt
+      formattedCreatedAt
       user {
         id
         name
@@ -93,10 +75,6 @@ export const GET_USER_DETAIL = gql`
       id
       name
       email
-      role {
-        id
-        name
-      }
     }
   }
 `;

@@ -1,14 +1,12 @@
-import { logout } from '@/app/redux/features/authSlice';
-import { useAppDispatch } from '@/app/redux/store/hooks';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
-import Cookies from "js-cookie";
+import { useAuth } from '@/context/AuthContext';
 
 const ChatHeader = () => {
-    const dispatch = useAppDispatch();
     const router = useRouter();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const { logout: authLogout } = useAuth();
 
     const toggleMenu = () => {
         setIsMenuOpen((prev) => !prev);
@@ -28,9 +26,7 @@ const ChatHeader = () => {
     }, []);
 
     const handleLogout = async () => {
-        dispatch(logout());
-        localStorage.removeItem('user');
-        Cookies.remove("token");
+        authLogout();
         router.push("/login");
     }
 

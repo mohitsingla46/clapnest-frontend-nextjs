@@ -5,5 +5,6 @@ export interface ChatDetail {
     senderId: string;
     message: string;
     createdAt: Date;
+    formattedCreatedAt: string;
     user: User
 }

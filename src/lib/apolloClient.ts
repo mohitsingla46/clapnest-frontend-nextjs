@@ -2,7 +2,7 @@ import { ApolloClient, InMemoryCache, HttpLink, ApolloLink } from '@apollo/clien
 import Cookies from "js-cookie";
 
 const httpLink = new HttpLink({
-    uri: "http://localhost:5000/graphql",
+    uri: `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
 });
 
 const authLink = new ApolloLink((operation, forward) => {

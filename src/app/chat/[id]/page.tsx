@@ -1,4 +1,5 @@
 "use client";
+import { useSocket } from '@/context/SocketContext';
 import { GET_CHAT_HISTORY, GET_USER_DETAIL } from '@/graphql/graphql-queries';
 import { ChatDetail as chatMessage } from '@/types/ChatDetail';
 import { User } from '@/types/User';
@@ -7,13 +8,15 @@ import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
 
 const ChatDetail = () => {
-    const { id: otherUserId } = useParams();
+    const { id } = useParams();
+    const otherUserId = Array.isArray(id) ? id[0] : id;
     const router = useRouter();
     const messageContainerRef = useRef<HTMLDivElement>(null);
+    const { joinRoom } = useSocket();
 
     const [messages, setMessages] = useState<chatMessage[]>([]);
     const [user, setUser] = useState<User | null>(null);
-    const [currentUserId, setCurrentUserId] = useState<User | null>(null);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [newMessage, setNewMessage] = useState('');
 
     const { data: chatHistoryData } = useQuery(GET_CHAT_HISTORY, {
@@ -31,6 +34,15 @@ const ChatDetail = () => {
     useEffect(() => {
         const currentUser = localStorage.getItem('user');
         setCurrentUserId(currentUser ? JSON.parse(currentUser).id : null);
+    }, []);
+
+    useEffect(() => {
+        if (currentUserId && otherUserId) {
+            joinRoom(currentUserId, otherUserId);
+        }
+    }, [currentUserId, otherUserId, joinRoom]);
+
+    useEffect(() => {
         if (userDetailsData?.getUserDetail) {
             setUser(userDetailsData.getUserDetail);
         }
@@ -80,25 +92,17 @@ const ChatDetail = () => {
                     {messages.map((msg) => (
                         <div
                             key={msg.id}
-                            className={`flex ${msg.senderId === currentUserId?.id ? 'justify-end' : 'justify-start'}`}
+                            className={`flex ${msg.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
                         >
                             <div
-                                className={`max-w-[70%] p-3 rounded-2xl ${msg.senderId === currentUserId?.id
+                                className={`max-w-[70%] p-3 rounded-2xl ${msg.senderId === currentUserId
                                     ? 'bg-gradient-to-r from-blue-400 to-cyan-400 text-white'
                                     : 'bg-gray-100 text-gray-800'
                                     }`}
                             >
                                 <p className="break-words">{msg.message}</p>
                                 <span className="block text-xs mt-1 opacity-75">
-                                    {new Date(msg.createdAt).toLocaleString('en-US', {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        second: '2-digit',
-                                        hour12: true,
-                                    })}
+                                    {msg.formattedCreatedAt}
                                 </span>
                             </div>
                         </div>

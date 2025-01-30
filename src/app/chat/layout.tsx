@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import Header from "./layout/Header";
+import { SocketProvider } from "@/context/SocketContext";
 
 export default function Layout({
     children,
@@ -8,8 +8,8 @@ export default function Layout({
     children: React.ReactNode;
 }>) {
     return (
-        <>
+        <SocketProvider>
             {children}
-        </>
+        </SocketProvider>
     );
 }

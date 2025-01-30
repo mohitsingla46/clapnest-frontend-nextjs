@@ -2,18 +2,17 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
-import { useMutation, useQuery } from '@apollo/client';
-import { GET_ROLES, SIGNUP_MUTATION } from '@/graphql/graphql-queries';
+import { useMutation } from '@apollo/client';
+import { SIGNUP_MUTATION } from '@/graphql/graphql-queries';
 
 const schema = z.object({
 	name: z.string().nonempty('Name is required'),
 	email: z.string().nonempty('Email is required').email("Invalid email"),
-	password: z.string().nonempty('Password is required'),
-	role: z.string().nonempty('Role is required')
+	password: z.string().nonempty('Password is required')
 });
 
 type FormData = z.infer<typeof schema>;
@@ -21,25 +20,16 @@ type FormData = z.infer<typeof schema>;
 const Register = () => {
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
-	const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
 	const [signupMutation] = useMutation(SIGNUP_MUTATION);
 
 	const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
 		resolver: zodResolver(schema),
 	});
 
-	const { data } = useQuery(GET_ROLES);
-
-	useEffect(() => {
-		if (data) {
-			setRoles(data.getRoles);
-		}
-	}, [data]);
-
 	const onSubmit = async (data: FormData) => {
 		setLoading(true);
 		try {
-			const response = await signupMutation({ variables: { name: data.name, email: data.email, password: data.password, role: data.role } });
+			await signupMutation({ variables: { name: data.name, email: data.email, password: data.password } });
 			toast.success("You have successfully signed up");
 			router.push("/login");
 		} catch (error: any) {
@@ -102,29 +92,6 @@ const Register = () => {
 						/>
 						{errors.password && (
 							<div className="text-red-500 text-sm">{errors.password.message}</div>
-						)}
-					</div>
-
-					{/* Role Field */}
-					<div>
-						<label htmlFor="role" className="block text-gray-700 mb-1">
-							Role
-						</label>
-						<select
-							id="role"
-							className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring ${errors.role ? "border-red-500 ring-red-300" : "border-gray-300"
-								}`}
-							{...register("role")}
-						>
-							<option value="">Select your role</option>
-							{roles.map((role) => (
-								<option key={role.id} value={role.id}>
-									{role.name}
-								</option>
-							))}
-						</select>
-						{errors.role && (
-							<div className="text-red-500 text-sm">{errors.role.message}</div>
 						)}
 					</div>
 
