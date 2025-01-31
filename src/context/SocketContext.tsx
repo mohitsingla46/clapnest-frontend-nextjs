@@ -9,6 +9,10 @@ interface SocketContextType {
     socket: Socket | null;
     isConnected: boolean;
     joinRoom: (userId: string, otherUserId: string) => void;
+    leaveRoom: (roomId: string) => void;
+    currentRoom: string | null;
+    sendMessage: (messageData: any) => void;
+    onMessageReceived: (callback: ((message: any) => void) | null) => void;
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -27,10 +31,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
         newSocket.on("disconnect", () => {
             setIsConnected(false);
+            setCurrentRoom(null);
         });
 
         newSocket.on("roomJoined", (data: { roomId: string; message: string }) => {
-            console.log(data.message);
             setCurrentRoom(data.roomId);
         });
 
@@ -47,7 +51,28 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    return <SocketContext.Provider value={{ socket, isConnected, joinRoom }}>{children}</SocketContext.Provider>;
+    const leaveRoom = (roomId: string) => {
+        if (socket) {
+            socket.emit("leaveRoom", { roomId });
+            setCurrentRoom(null);
+        }
+    };
+
+    const sendMessage = (messageData: any) => {
+        if (!socket || !currentRoom) return;
+        socket.emit("message", { ...messageData, roomId: currentRoom });
+    };
+
+    const onMessageReceived = (callback: ((message: any) => void) | null) => {
+        if (!socket) return;
+        if (callback) {
+            socket.on("message", callback);
+        } else {
+            socket.off("message");
+        }
+    };
+
+    return <SocketContext.Provider value={{ socket, isConnected, joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived }}>{children}</SocketContext.Provider>;
 };
 
 export const useSocket = () => {

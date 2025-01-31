@@ -12,7 +12,7 @@ const ChatDetail = () => {
     const otherUserId = Array.isArray(id) ? id[0] : id;
     const router = useRouter();
     const messageContainerRef = useRef<HTMLDivElement>(null);
-    const { joinRoom } = useSocket();
+    const { joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived } = useSocket();
 
     const [messages, setMessages] = useState<chatMessage[]>([]);
     const [user, setUser] = useState<User | null>(null);
@@ -27,21 +27,41 @@ const ChatDetail = () => {
         variables: { id: otherUserId },
     });
 
-    const handleSubmit = () => {
+    // Send message
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !currentRoom || !currentUserId) return;
 
+        const messageData = {
+            senderId: currentUserId,
+            roomId: currentRoom,
+            message: newMessage,
+        };
+
+        sendMessage(messageData);
+        setNewMessage('');
     }
 
+    // Load user from localStorage
     useEffect(() => {
         const currentUser = localStorage.getItem('user');
         setCurrentUserId(currentUser ? JSON.parse(currentUser).id : null);
     }, []);
 
+    // Join the chat room
     useEffect(() => {
         if (currentUserId && otherUserId) {
             joinRoom(currentUserId, otherUserId);
         }
-    }, [currentUserId, otherUserId, joinRoom]);
 
+        return () => {
+            if (currentRoom) {
+                leaveRoom(currentRoom);
+            }
+        };
+    }, [currentUserId, otherUserId, joinRoom, currentRoom, leaveRoom]);
+
+    // Load user and chat history
     useEffect(() => {
         if (userDetailsData?.getUserDetail) {
             setUser(userDetailsData.getUserDetail);
@@ -50,6 +70,32 @@ const ChatDetail = () => {
             setMessages(chatHistoryData.getChatHistory);
         }
     }, [userDetailsData, chatHistoryData]);
+
+    // Auto-scroll to the latest message
+    useEffect(() => {
+        if (messageContainerRef.current) {
+            messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    // Listen for incoming messages
+    useEffect(() => {
+        onMessageReceived((newMsg) => {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: crypto.randomUUID(),
+                    senderId: newMsg.senderId,
+                    message: newMsg.message,
+                    createdAt: new Date(),
+                    formattedCreatedAt: new Date().toLocaleString(),
+                    user: { id: newMsg.senderId, name: "Unknown", email: "" },
+                }
+            ]);
+        });
+    
+        return () => onMessageReceived(null);
+    }, [onMessageReceived]);
 
     return (
         <div className="min-h-screen md:flex md:justify-center md:items-center md:mt-2">
@@ -89,9 +135,9 @@ const ChatDetail = () => {
                     ref={messageContainerRef}
                     className="flex-1 p-4 overflow-y-auto flex flex-col space-y-4 [scrollbar-width:thin] [scrollbar-color:#00f2fe_#f1f1f1] scroll-smooth custom-scrollbar"
                 >
-                    {messages.map((msg) => (
+                    {messages.map((msg, index) => (
                         <div
-                            key={msg.id}
+                            key={msg.id || `${msg.senderId}-${index}`}
                             className={`flex ${msg.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
                         >
                             <div
@@ -101,9 +147,9 @@ const ChatDetail = () => {
                                     }`}
                             >
                                 <p className="break-words">{msg.message}</p>
-                                <span className="block text-xs mt-1 opacity-75">
+                                {/* <span className="block text-xs mt-1 opacity-75">
                                     {msg.formattedCreatedAt}
-                                </span>
+                                </span> */}
                             </div>
                         </div>
                     ))}

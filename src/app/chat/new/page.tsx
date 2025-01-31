@@ -16,11 +16,8 @@ const NewChat = () => {
         }
     }, [data]);
 
-    const handleBackClick = () => {
-        router.push("/chat");
-    };
-
-    const handleUserClick = () => {
+    const handleUserClick = (userId: string) => {
+        router.push(`/chat/${userId}`);
     };
 
     return (
@@ -29,7 +26,7 @@ const NewChat = () => {
                 {/* Header */}
                 <div className="flex items-center bg-gray-800 text-white md:rounded-t-lg p-4">
                     <button
-                        onClick={handleBackClick}
+                        onClick={() => router.push('/chat')}
                         className="bg-transparent text-blue-500 p-2 rounded-md hover:bg-gray-700"
                     >
                         <svg
@@ -54,7 +51,7 @@ const NewChat = () => {
                         users.map((user) => (
                             <div
                                 key={user.id}
-                                onClick={() => handleUserClick}
+                                onClick={() => handleUserClick(user.id)}
                                 className="flex items-center p-4 hover:bg-gray-100 cursor-pointer"
                             >
                                 <img
