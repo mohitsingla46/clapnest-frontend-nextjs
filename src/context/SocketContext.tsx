@@ -13,6 +13,8 @@ interface SocketContextType {
     currentRoom: string | null;
     sendMessage: (messageData: any) => void;
     onMessageReceived: (callback: ((message: any) => void) | null) => void;
+    userStatuses: Array<{ userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }>;
+    setUserStatuses: React.Dispatch<React.SetStateAction<Array<{ userId: string; online: boolean; lastSeen?: string; formattedLastSeen?: string }>>>;
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -21,13 +23,28 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [currentRoom, setCurrentRoom] = useState<string | null>(null);
+    const [userStatuses, setUserStatuses] = useState<Array<{ userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }>>([]);
+    const [userData, setUserData] = useState<any | null>(null);
 
     useEffect(() => {
-        const newSocket = io(SOCKET_SERVER_URL);
+        if (typeof window !== "undefined") {
+            const user = localStorage.getItem("user");
+            if (user) {
+                setUserData(JSON.parse(user));
+            }
+        }
+    }, []);
 
-        newSocket.on("connect", () => {
-            setIsConnected(true);
+    useEffect(() => {
+        if (!userData) return;
+
+        const newSocket = io(SOCKET_SERVER_URL, {
+            query: {
+                userId: userData.id
+            }
         });
+
+        newSocket.on("connect", () => setIsConnected(true));
 
         newSocket.on("disconnect", () => {
             setIsConnected(false);
@@ -38,12 +55,20 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             setCurrentRoom(data.roomId);
         });
 
+        newSocket.on("userStatusUpdate", (data: { userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }) => {
+            setUserStatuses(prev => {
+                const updatedStatuses = prev.filter(status => status.userId !== data.userId);
+                updatedStatuses.push({ userId: data.userId, online: data.online, lastSeen: data.lastSeen, formattedLastSeen:data.formattedLastSeen });
+                return updatedStatuses;
+            });
+        });
+
         setSocket(newSocket);
 
         return () => {
             newSocket.disconnect();
         };
-    }, []);
+    }, [userData]);
 
     const joinRoom = (userId: string, otherUserId: string) => {
         if (socket) {
@@ -72,7 +97,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    return <SocketContext.Provider value={{ socket, isConnected, joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived }}>{children}</SocketContext.Provider>;
+    return <SocketContext.Provider value={{ socket, isConnected, joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived, userStatuses, setUserStatuses }}>{children}</SocketContext.Provider>;
 };
 
 export const useSocket = () => {

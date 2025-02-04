@@ -75,6 +75,9 @@ export const GET_USER_DETAIL = gql`
       id
       name
       email
+      online
+      lastSeen
+      formattedLastSeen
     }
   }
 `;

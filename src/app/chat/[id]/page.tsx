@@ -12,19 +12,22 @@ const ChatDetail = () => {
     const otherUserId = Array.isArray(id) ? id[0] : id;
     const router = useRouter();
     const messageContainerRef = useRef<HTMLDivElement>(null);
-    const { joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived } = useSocket();
+    const { joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived, userStatuses, setUserStatuses } = useSocket();
 
     const [messages, setMessages] = useState<chatMessage[]>([]);
     const [user, setUser] = useState<User | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [newMessage, setNewMessage] = useState('');
+    const userStatus = userStatuses.find(user => user.userId === otherUserId);
 
     const { data: chatHistoryData } = useQuery(GET_CHAT_HISTORY, {
         variables: { otherUserId },
         skip: !otherUserId,
+        fetchPolicy: "network-only",
     });
     const { data: userDetailsData } = useQuery(GET_USER_DETAIL, {
         variables: { id: otherUserId },
+        fetchPolicy: "network-only",
     });
 
     // Send message
@@ -65,6 +68,18 @@ const ChatDetail = () => {
     useEffect(() => {
         if (userDetailsData?.getUserDetail) {
             setUser(userDetailsData.getUserDetail);
+
+            const fetchedUserStatus = {
+                userId: userDetailsData.getUserDetail.id,
+                online: userDetailsData.getUserDetail.online,
+                lastSeen: userDetailsData.getUserDetail.lastSeen || null,
+                formattedLastSeen: userDetailsData.getUserDetail.formattedLastSeen || null
+            };
+
+            setUserStatuses((prev) => {
+                const updatedStatuses = prev.filter(status => status.userId !== fetchedUserStatus.userId);
+                return [...updatedStatuses, fetchedUserStatus];
+            });
         }
         if (chatHistoryData?.getChatHistory) {
             setMessages(chatHistoryData.getChatHistory);
@@ -93,7 +108,7 @@ const ChatDetail = () => {
                 }
             ]);
         });
-    
+
         return () => onMessageReceived(null);
     }, [onMessageReceived]);
 
@@ -126,7 +141,12 @@ const ChatDetail = () => {
                     />
                     <div className="ml-3">
                         <h6 className="text-base font-medium">{user?.name || 'N/A'}</h6>
-                        <span className="text-sm text-gray-300">Online</span>
+                        <span className="text-sm text-gray-300">
+                            {userStatus?.online
+                                ? "Online"
+                                : `Last seen ${userStatus?.formattedLastSeen || "a while ago"}`
+                            }
+                        </span>
                     </div>
                 </div>
 
