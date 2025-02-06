@@ -9,12 +9,13 @@ interface SocketContextType {
     socket: Socket | null;
     isConnected: boolean;
     joinRoom: (userId: string, otherUserId: string) => void;
-    leaveRoom: (roomId: string) => void;
+    leaveRoom: (userId: string, roomId: string) => void;
     currentRoom: string | null;
     sendMessage: (messageData: any) => void;
     onMessageReceived: (callback: ((message: any) => void) | null) => void;
     userStatuses: Array<{ userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }>;
     setUserStatuses: React.Dispatch<React.SetStateAction<Array<{ userId: string; online: boolean; lastSeen?: string; formattedLastSeen?: string }>>>;
+    markMessagesAsRead: (userId: string, roomId: string) => void;
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -58,7 +59,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         newSocket.on("userStatusUpdate", (data: { userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }) => {
             setUserStatuses(prev => {
                 const updatedStatuses = prev.filter(status => status.userId !== data.userId);
-                updatedStatuses.push({ userId: data.userId, online: data.online, lastSeen: data.lastSeen, formattedLastSeen:data.formattedLastSeen });
+                updatedStatuses.push({ userId: data.userId, online: data.online, lastSeen: data.lastSeen, formattedLastSeen: data.formattedLastSeen });
                 return updatedStatuses;
             });
         });
@@ -76,9 +77,9 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const leaveRoom = (roomId: string) => {
+    const leaveRoom = (userId: string, roomId: string) => {
         if (socket) {
-            socket.emit("leaveRoom", { roomId });
+            socket.emit("leaveRoom", { userId, roomId });
             setCurrentRoom(null);
         }
     };
@@ -97,7 +98,20 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    return <SocketContext.Provider value={{ socket, isConnected, joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived, userStatuses, setUserStatuses }}>{children}</SocketContext.Provider>;
+    const markMessagesAsRead = (userId: string, roomId: string) => {
+        if (!socket || !userId || !roomId) return;
+
+        if (isUserInChatRoom(userId, roomId)) {
+            socket.emit("markAsRead", { userId, roomId });
+        }
+    };
+
+    const isUserInChatRoom = (userId: string, roomId: string) => {
+        if (!userData) return;
+        return currentRoom === roomId && userId === userData.id;
+    };
+
+    return <SocketContext.Provider value={{ socket, isConnected, joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived, userStatuses, setUserStatuses, markMessagesAsRead }}>{children}</SocketContext.Provider>;
 };
 
 export const useSocket = () => {

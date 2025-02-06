@@ -59,6 +59,7 @@ export const GET_CHAT_HISTORY = gql`
       id
       senderId
       message
+      read
       createdAt
       formattedCreatedAt
       user {

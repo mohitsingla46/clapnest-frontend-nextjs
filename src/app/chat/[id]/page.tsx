@@ -12,7 +12,7 @@ const ChatDetail = () => {
     const otherUserId = Array.isArray(id) ? id[0] : id;
     const router = useRouter();
     const messageContainerRef = useRef<HTMLDivElement>(null);
-    const { joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived, userStatuses, setUserStatuses } = useSocket();
+    const { joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived, userStatuses, setUserStatuses, markMessagesAsRead } = useSocket();
 
     const [messages, setMessages] = useState<chatMessage[]>([]);
     const [user, setUser] = useState<User | null>(null);
@@ -58,8 +58,8 @@ const ChatDetail = () => {
         }
 
         return () => {
-            if (currentRoom) {
-                leaveRoom(currentRoom);
+            if (currentUserId && currentRoom) {
+                leaveRoom(currentUserId, currentRoom);
             }
         };
     }, [currentUserId, otherUserId, joinRoom, currentRoom, leaveRoom]);
@@ -93,6 +93,12 @@ const ChatDetail = () => {
         }
     }, [messages]);
 
+    useEffect(() => {
+        if (currentRoom && currentUserId) {
+            markMessagesAsRead(currentUserId, currentRoom);
+        }
+    }, [currentRoom, currentUserId, markMessagesAsRead]);
+
     // Listen for incoming messages
     useEffect(() => {
         onMessageReceived((newMsg) => {
@@ -102,15 +108,19 @@ const ChatDetail = () => {
                     id: crypto.randomUUID(),
                     senderId: newMsg.senderId,
                     message: newMsg.message,
+                    read: true,
                     createdAt: new Date(),
                     formattedCreatedAt: new Date().toLocaleString(),
                     user: { id: newMsg.senderId, name: "Unknown", email: "" },
                 }
             ]);
-        });
 
+            if (currentUserId && currentRoom) {
+                markMessagesAsRead(currentUserId, currentRoom);
+            }
+        });
         return () => onMessageReceived(null);
-    }, [onMessageReceived]);
+    }, [onMessageReceived, currentUserId, currentRoom]);
 
     return (
         <div className="min-h-screen md:flex md:justify-center md:items-center md:mt-2">
