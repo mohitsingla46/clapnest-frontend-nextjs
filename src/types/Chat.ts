@@ -1,8 +1,9 @@
 import { User } from "./User";
 
-export interface ChatList {
+export interface Chat {
     user: User;
     roomId: string;
     lastMessage: string;
     lastMessageTime: string;
+    unreadCount?: number;
 }

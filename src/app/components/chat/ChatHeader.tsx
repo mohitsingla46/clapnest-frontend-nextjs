@@ -1,12 +1,14 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/context/AuthContext';
+import { useSocket } from '@/context/SocketContext';
 
 const ChatHeader = () => {
     const router = useRouter();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const { logout: authLogout } = useAuth();
+    const { leaveUserRoom } = useSocket();
 
     const toggleMenu = () => {
         setIsMenuOpen((prev) => !prev);
@@ -27,6 +29,7 @@ const ChatHeader = () => {
 
     const handleLogout = async () => {
         authLogout();
+        leaveUserRoom();
         router.push("/login");
     }
 

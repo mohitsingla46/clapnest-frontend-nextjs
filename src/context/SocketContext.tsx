@@ -1,5 +1,6 @@
 "use client";
 
+import { Chat } from "@/types/Chat";
 import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -10,12 +11,16 @@ interface SocketContextType {
     isConnected: boolean;
     joinRoom: (userId: string, otherUserId: string) => void;
     leaveRoom: (userId: string, roomId: string) => void;
+    leaveUserRoom: () => void;
     currentRoom: string | null;
     sendMessage: (messageData: any) => void;
     onMessageReceived: (callback: ((message: any) => void) | null) => void;
     userStatuses: Array<{ userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }>;
     setUserStatuses: React.Dispatch<React.SetStateAction<Array<{ userId: string; online: boolean; lastSeen?: string; formattedLastSeen?: string }>>>;
     markMessagesAsRead: (userId: string, roomId: string) => void;
+    updateChatList: (messageData: any) => void;
+    chats: Chat[];
+    setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -26,6 +31,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const [currentRoom, setCurrentRoom] = useState<string | null>(null);
     const [userStatuses, setUserStatuses] = useState<Array<{ userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }>>([]);
     const [userData, setUserData] = useState<any | null>(null);
+    const [chats, setChats] = useState<any[]>([]);
+    const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>({});
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -45,7 +52,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             }
         });
 
-        newSocket.on("connect", () => setIsConnected(true));
+        newSocket.on("connect", () => {
+            setIsConnected(true);
+
+            newSocket.emit("join_user", { userId: userData.id });
+        });
 
         newSocket.on("disconnect", () => {
             setIsConnected(false);
@@ -64,9 +75,28 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             });
         });
 
+        newSocket.on("new_message", (data) => {
+            setChats((prevChats) =>
+                prevChats.map((chat) =>
+                    chat.user.id === data.senderId
+                        ? {
+                            ...chat,
+                            lastMessage: data.message,
+                            lastMessageTime: data.formattedCreatedAt,
+                            unreadCount: (chat.unreadCount || 0) + 1,
+                        }
+                        : chat
+                )
+            );
+        });
+
         setSocket(newSocket);
 
         return () => {
+            newSocket.off("new_message");
+            newSocket.off("roomJoined");
+            newSocket.off("userStatusUpdate");
+            newSocket.off("disconnect");
             newSocket.disconnect();
         };
     }, [userData]);
@@ -81,6 +111,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         if (socket) {
             socket.emit("leaveRoom", { userId, roomId });
             setCurrentRoom(null);
+        }
+    };
+
+    const leaveUserRoom = () => {
+        if (socket && userData) {
+            socket.emit("leave_user", { userId: userData.id });
         }
     };
 
@@ -111,7 +147,24 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         return currentRoom === roomId && userId === userData.id;
     };
 
-    return <SocketContext.Provider value={{ socket, isConnected, joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived, userStatuses, setUserStatuses, markMessagesAsRead }}>{children}</SocketContext.Provider>;
+    const updateChatList = (messageData: any) => {
+        setChats((prevChats) =>
+            prevChats.map((chat) =>
+                chat.user.id === messageData.senderId
+                    ? {
+                        ...chat,
+                        lastMessage: messageData.message,
+                        lastMessageTime: messageData.formattedCreatedAt,
+                        unreadCount: (chat.unreadCount || 0) + 1,
+                    }
+                    : chat
+            )
+        );
+    };
+
+    return <SocketContext.Provider value={{
+        socket, isConnected, joinRoom, leaveRoom, currentRoom, sendMessage, onMessageReceived, userStatuses, setUserStatuses, markMessagesAsRead, updateChatList, chats, setChats, leaveUserRoom
+    }}>{children}</SocketContext.Provider>;
 };
 
 export const useSocket = () => {

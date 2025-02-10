@@ -150,7 +150,7 @@ const ChatDetail = () => {
                         className="w-12 h-12 rounded-full object-cover"
                     />
                     <div className="ml-3">
-                        <h6 className="text-base font-medium">{user?.name || 'N/A'}</h6>
+                        <h6 className="text-base font-medium">{user?.name || ''}</h6>
                         <span className="text-sm text-gray-300">
                             {userStatus?.online
                                 ? "Online"

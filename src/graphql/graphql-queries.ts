@@ -39,6 +39,7 @@ export const GET_CHATS = gql`
       }
       lastMessage
       lastMessageTime
+      unreadCount
     }
   }
 `;
