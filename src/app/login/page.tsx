@@ -37,8 +37,12 @@ const Login = () => {
             const response = await loginMutation({ variables: { email: data.email, password: data.password } });
             authLogin(response.data.signin.user, response.data.signin.token);
             router.push("/chat");
-        } catch (error: any) {
-            toast.error(error.message || "An unknown error occurred");
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message || "An unknown error occurred");
+            } else {
+                toast.error("An unknown error occurred");
+            }
         } finally {
             setLoading(false);
         }

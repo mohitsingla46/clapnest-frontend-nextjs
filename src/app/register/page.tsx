@@ -32,8 +32,12 @@ const Register = () => {
 			await signupMutation({ variables: { name: data.name, email: data.email, password: data.password } });
 			toast.success("You have successfully signed up");
 			router.push("/login");
-		} catch (error: any) {
-			toast.error(error.message || "An unknown error occurred");
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+                toast.error(error.message || "An unknown error occurred");
+            } else {
+                toast.error("An unknown error occurred");
+            }
 		} finally {
 			setLoading(false);
 		}

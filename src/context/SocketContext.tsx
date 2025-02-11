@@ -1,6 +1,9 @@
 "use client";
 
 import { Chat } from "@/types/Chat";
+import { ChatDetail } from "@/types/ChatDetail";
+import { Message } from "@/types/Message";
+import { User } from "@/types/User";
 import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -13,12 +16,12 @@ interface SocketContextType {
     leaveRoom: (userId: string, roomId: string) => void;
     leaveUserRoom: () => void;
     currentRoom: string | null;
-    sendMessage: (messageData: any) => void;
-    onMessageReceived: (callback: ((message: any) => void) | null) => void;
+    sendMessage: (messageData: Message) => void;
+    onMessageReceived: (callback: ((message: ChatDetail) => void) | null) => void;
     userStatuses: Array<{ userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }>;
     setUserStatuses: React.Dispatch<React.SetStateAction<Array<{ userId: string; online: boolean; lastSeen?: string; formattedLastSeen?: string }>>>;
     markMessagesAsRead: (userId: string, roomId: string) => void;
-    updateChatList: (messageData: any) => void;
+    updateChatList: (messageData: Message) => void;
     chats: Chat[];
     setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
 }
@@ -30,8 +33,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const [isConnected, setIsConnected] = useState(false);
     const [currentRoom, setCurrentRoom] = useState<string | null>(null);
     const [userStatuses, setUserStatuses] = useState<Array<{ userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }>>([]);
-    const [userData, setUserData] = useState<any | null>(null);
-    const [chats, setChats] = useState<any[]>([]);
+    const [userData, setUserData] = useState<User | null>(null);
+    const [chats, setChats] = useState<Chat[]>([]);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -119,12 +122,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const sendMessage = (messageData: any) => {
+    const sendMessage = (messageData: Message) => {
         if (!socket || !currentRoom) return;
         socket.emit("message", { ...messageData, roomId: currentRoom });
     };
 
-    const onMessageReceived = (callback: ((message: any) => void) | null) => {
+    const onMessageReceived = (callback: ((message: ChatDetail) => void) | null) => {
         if (!socket) return;
         if (callback) {
             socket.on("message", callback);
@@ -146,14 +149,14 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         return currentRoom === roomId && userId === userData.id;
     };
 
-    const updateChatList = (messageData: any) => {
+    const updateChatList = (messageData: Message) => {
         setChats((prevChats) =>
             prevChats.map((chat) =>
                 chat.user.id === messageData.senderId
                     ? {
                         ...chat,
                         lastMessage: messageData.message,
-                        lastMessageTime: messageData.formattedCreatedAt,
+                        lastMessageTime: messageData.formattedCreatedAt || "",
                         unreadCount: (chat.unreadCount || 0) + 1,
                     }
                     : chat

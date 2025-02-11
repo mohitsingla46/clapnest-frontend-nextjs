@@ -2,17 +2,23 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import { User } from "@/types/User";
+
+interface UserData {
+    user: User | null;
+    token: string;
+}
 
 interface AuthContextType {
-    user: any;
-    login: (userData: any, token: string) => void;
+    user: User | null;
+    login: (userData: UserData, token: string) => void;
     logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
 
     useEffect(() => {
         const token = Cookies.get("token");
@@ -23,8 +29,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, []);
 
-    const login = (userData: any, token: string) => {
-        setUser(userData);
+    const login = (userData: UserData, token: string) => {
+        setUser(userData.user);
         Cookies.set("token", token, { expires: 7 });
         localStorage.setItem("user", JSON.stringify(userData));
     };

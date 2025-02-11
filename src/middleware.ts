@@ -68,6 +68,7 @@ async function validateToken(token: string): Promise<boolean> {
         const data = await response.json();
         return data.data?.getprofile ?? false;
     } catch (error) {
+        console.log(error);
         return false;
     }
 }
