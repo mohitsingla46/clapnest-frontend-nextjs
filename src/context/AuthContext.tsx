@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 
 interface AuthContextType {
@@ -14,7 +13,6 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<any>(null);
-    const router = useRouter();
 
     useEffect(() => {
         const token = Cookies.get("token");

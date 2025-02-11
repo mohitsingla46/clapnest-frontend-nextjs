@@ -2,6 +2,7 @@
 import { GET_CHAT_USERS } from '@/graphql/graphql-queries';
 import { UserList } from '@/types/UserList';
 import { useQuery } from '@apollo/client';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 
@@ -54,9 +55,11 @@ const NewChat = () => {
                                 onClick={() => handleUserClick(user.id)}
                                 className="flex items-center p-4 hover:bg-gray-100 cursor-pointer"
                             >
-                                <img
-                                    src="https://placehold.co/50"
+                                <Image
+                                    src="https://placehold.co/50.png"
                                     alt="User"
+                                    width={50}
+                                    height={50}
                                     className="w-12 h-12 rounded-full object-cover"
                                 />
                                 <div className="ml-4 flex-grow">

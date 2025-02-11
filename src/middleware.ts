@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const publicRoutes = ['/login', '/register']
-const SECRET_KEY = process.env.JWT_SECRET || 'your-secret-key'
 
 export async function middleware(request: NextRequest) {
     const token = request.cookies.get("token")?.value;

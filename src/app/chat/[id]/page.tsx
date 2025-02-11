@@ -4,6 +4,7 @@ import { GET_CHAT_HISTORY, GET_USER_DETAIL } from '@/graphql/graphql-queries';
 import { ChatDetail as chatMessage } from '@/types/ChatDetail';
 import { User } from '@/types/User';
 import { useQuery } from '@apollo/client';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -84,7 +85,7 @@ const ChatDetail = () => {
         if (chatHistoryData?.getChatHistory) {
             setMessages(chatHistoryData.getChatHistory);
         }
-    }, [userDetailsData, chatHistoryData]);
+    }, [userDetailsData, chatHistoryData, setUserStatuses]);
 
     // Auto-scroll to the latest message
     useEffect(() => {
@@ -120,7 +121,7 @@ const ChatDetail = () => {
             }
         });
         return () => onMessageReceived(null);
-    }, [onMessageReceived, currentUserId, currentRoom]);
+    }, [onMessageReceived, currentUserId, currentRoom, markMessagesAsRead]);
 
     return (
         <div className="min-h-screen md:flex md:justify-center md:items-center md:mt-2">
@@ -144,9 +145,11 @@ const ChatDetail = () => {
                             />
                         </svg>
                     </button>
-                    <img
-                        src="https://placehold.co/50"
+                    <Image
+                        src="https://placehold.co/50.png"
                         alt="User"
+                        width={50}
+                        height={50}
                         className="w-12 h-12 rounded-full object-cover"
                     />
                     <div className="ml-3">

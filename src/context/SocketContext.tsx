@@ -32,7 +32,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const [userStatuses, setUserStatuses] = useState<Array<{ userId: string; online: boolean; lastSeen?: string, formattedLastSeen?: string }>>([]);
     const [userData, setUserData] = useState<any | null>(null);
     const [chats, setChats] = useState<any[]>([]);
-    const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>({});
 
     useEffect(() => {
         if (typeof window !== "undefined") {

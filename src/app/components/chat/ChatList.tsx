@@ -1,6 +1,7 @@
 import { useSocket } from '@/context/SocketContext';
 import { GET_CHATS } from '@/graphql/graphql-queries';
 import { useQuery } from '@apollo/client';
+import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect } from 'react'
 
@@ -14,7 +15,7 @@ const ChatList = () => {
 		if (data) {
 			setChats(data.getChats);
 		}
-	}, [data]);
+	}, [data, setChats]);
 
 	return (
 		<div className="divide-y divide-gray-200">
@@ -25,9 +26,11 @@ const ChatList = () => {
 						key={chat.user.id}
 						className="flex items-center p-4 hover:bg-gray-100 relative"
 					>
-						<img
-							src="https://placehold.co/50"
+						<Image
+							src="https://placehold.co/50.png"
 							alt="User"
+							width={50}
+							height={50}
 							className="rounded-full w-12 h-12 object-cover"
 						/>
 						<div className="ml-4 flex-grow">
